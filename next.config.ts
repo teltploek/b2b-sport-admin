@@ -1,7 +1,9 @@
-import type { NextConfig } from "next";
+import type { NextConfig } from 'next';
 
 const nextConfig: NextConfig = {
-  /* config options here */
+  images: {
+    domains: ['i.pravatar.cc', 'via.placeholder.com', 'uifaces.co'], // add your domains here
+  },
 };
 
 export default nextConfig;
