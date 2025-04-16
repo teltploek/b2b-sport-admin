@@ -20,6 +20,7 @@ import {
   UsersRound,
   ChevronLeft,
   LogOut,
+  Shirt,
 } from 'lucide-react';
 
 interface SidebarItem {
@@ -96,9 +97,14 @@ const clubStaffItems: SidebarItem[] = [
     icon: <LayoutDashboard className="h-5 w-5" />,
   },
   {
+    name: 'Roster Management',
+    href: '/roster-management',
+    icon: <UsersRound className="h-5 w-5" />,
+  },
+  {
     name: 'Team Management',
     href: '/team-management',
-    icon: <UsersRound className="h-5 w-5" />,
+    icon: <Shirt className="h-5 w-5" />,
   },
   {
     name: 'Order Status',
@@ -179,7 +185,7 @@ export function Sidebar({
       <nav className="px-3 py-6 flex-1 overflow-y-auto">
         <ul className="space-y-1">
           {navItems.map((item) => {
-            const isActive = pathname === item.href;
+            const isActive = pathname === item.href || pathname.startsWith(`${item.href}/`);
             return (
               <li key={item.name}>
                 <Link
