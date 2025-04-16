@@ -68,12 +68,8 @@ export default function LoginPage() {
                     className="w-full text-gray-900 bg-white border border-gray-300 rounded-md py-2.5 pl-3 pr-10 appearance-none focus:outline-none focus:ring-1 focus:ring-primary focus:border-primary"
                   >
                     <option value={UserRole.B2BSportAdmin}>B2B Sport Admin</option>
-                    <option value={UserRole.ClubAdmin} disabled>
-                      Club Admin (Coming Soon)
-                    </option>
-                    <option value={UserRole.ClubStaff} disabled>
-                      Club Staff (Coming Soon)
-                    </option>
+                    <option value={UserRole.ClubAdmin}>Club Admin</option>
+                    <option value={UserRole.ClubStaff}>Club Staff</option>
                   </select>
                   <div className="absolute inset-y-0 right-0 flex items-center px-2 pointer-events-none">
                     <svg
