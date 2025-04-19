@@ -231,6 +231,19 @@ export interface OrderViewModel {
   progress: number;
 }
 
+export interface PlayerKitDetailsViewModel {
+  id: string;
+  name: string;
+  clubId: string;
+  teamId: string;
+  teamName: string;
+  status: AgreementStatus;
+  validUntil: string;
+  dueDate: string;
+  fields: AgreementField[];
+  playerMappings: PlayerMapping[];
+}
+
 // Mock Users
 export const mockUsers: User[] = [
   {
@@ -1104,6 +1117,49 @@ export const mockOrderViewModels: OrderViewModel[] = [
   },
 ];
 
+export const mockKitDetailRoster: {
+  id: string;
+  name: string;
+  position: string;
+  isActive: boolean;
+  image?: string;
+}[] = [
+  {
+    id: 'player-001',
+    name: 'Alex Johnson',
+    position: 'Forward',
+    isActive: true,
+    image: '/faces/uifaces-01.jpg',
+  },
+  {
+    id: 'player-002',
+    name: 'Sam Lee',
+    position: 'Midfielder',
+    isActive: true,
+    image: '/faces/uifaces-02.jpg',
+  },
+  {
+    id: 'player-003',
+    name: 'Taylor Martinez',
+    position: 'Defender',
+    isActive: true,
+    image: '/faces/uifaces-03.jpg',
+  },
+  {
+    id: 'player-004',
+    name: 'Jordan Smith',
+    position: 'Goalkeeper',
+    isActive: true,
+    image: '/faces/uifaces-04.jpg',
+  },
+  {
+    id: 'player-005',
+    name: 'Morgan Williams',
+    position: 'Forward',
+    isActive: false,
+  },
+];
+
 // Helper functions
 
 // Helper function to get club by ID
@@ -1250,4 +1306,39 @@ export function getOrderViewModel(orderId: string): OrderViewModel | undefined {
 // Get kit request by id
 export function getKitRequest(requestId: string): KitRequestViewModel | undefined {
   return mockKitRequests.find((request) => request.id === requestId);
+}
+
+export function getPlayerKitDetailsViewModel(
+  agreementId: string,
+): PlayerKitDetailsViewModel | null {
+  const agreement = mockAgreements.find((a) => a.id === agreementId);
+  if (!agreement) return null;
+
+  const template = mockAgreementTemplates.find((t) => t.id === agreement.templateId);
+  if (!template) return null;
+
+  const team = mockTeams.find((t) => t.id === agreement.teamId);
+
+  return {
+    id: agreement.id,
+    name: agreement.name,
+    clubId: agreement.clubId,
+    teamId: agreement.teamId,
+    teamName: team?.name || 'Team',
+    status: agreement.status,
+    validUntil: agreement.validUntil,
+    dueDate: agreement.dueDate || 'Apr 25, 2025', // Default due date if not available
+    fields: template.fields || [],
+    playerMappings: getAgreementPlayerMappings(agreementId),
+  };
+}
+
+// Helper function to get roster for a kit agreement
+export function getAgreementRoster(agreementId: string): typeof mockKitDetailRoster {
+  const agreement = mockAgreements.find((a) => a.id === agreementId);
+  if (!agreement || !agreement.teamId) return [];
+
+  // In a real app, we'd fetch the actual team roster
+  // For mock data, we'll return our standard roster with proper team filtering
+  return mockKitDetailRoster;
 }

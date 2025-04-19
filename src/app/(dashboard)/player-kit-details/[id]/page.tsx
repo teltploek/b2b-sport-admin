@@ -1,4 +1,4 @@
-// src/app/(dashboard)/agreement-mapping/[id]/page.tsx
+// src/app/(dashboard)/player-kit-details/[id]/page.tsx
 'use client';
 
 import { useState, useEffect } from 'react';
@@ -19,7 +19,7 @@ import {
 import Image from 'next/image';
 import Link from 'next/link';
 import { useAuth } from '@/lib/context/auth-context';
-import { getClubById, mockAgreements, Agreement } from '@/lib/data/mock-data';
+import { getClubById, AgreementStatus } from '@/lib/data/mock-data';
 
 // Player from roster
 interface Player {
@@ -48,112 +48,20 @@ interface PlayerMapping {
 }
 
 // Agreement details with template fields
-interface AgreementDetails extends Agreement {
-  fields: AgreementField[];
+interface AgreementDetails {
+  id: string;
+  name: string;
+  clubId: string;
+  teamId: string;
   teamName: string;
+  status: AgreementStatus;
+  validUntil: string;
   dueDate: string;
+  fields: AgreementField[];
   playerMappings: PlayerMapping[];
 }
 
-// Mock data for roster
-const mockRoster: Player[] = [
-  {
-    id: 'player-001',
-    name: 'Alex Johnson',
-    position: 'Forward',
-    isActive: true,
-    image: '/faces/uifaces-01.jpg',
-  },
-  {
-    id: 'player-002',
-    name: 'Sam Lee',
-    position: 'Midfielder',
-    isActive: true,
-    image: '/faces/uifaces-02.jpg',
-  },
-  {
-    id: 'player-003',
-    name: 'Taylor Martinez',
-    position: 'Defender',
-    isActive: true,
-    image: '/faces/uifaces-03.jpg',
-  },
-  {
-    id: 'player-004',
-    name: 'Jordan Smith',
-    position: 'Goalkeeper',
-    isActive: true,
-    image: '/faces/uifaces-04.jpg',
-  },
-  {
-    id: 'player-005',
-    name: 'Morgan Williams',
-    position: 'Forward',
-    isActive: false,
-  },
-];
-
-// Mock agreement fields (would be defined by B2B admin in the template)
-const mockAgreementFields: AgreementField[] = [
-  {
-    id: 'jersey-number',
-    name: 'Jersey Number',
-    type: 'number',
-    required: true,
-    description: 'Player jersey number (1-99)',
-  },
-  {
-    id: 'jersey-name',
-    name: 'Name on Jersey',
-    type: 'text',
-    required: true,
-    description: 'Name to print on the back of the jersey',
-  },
-  {
-    id: 'jersey-size',
-    name: 'Jersey Size',
-    type: 'select',
-    required: true,
-    options: ['XS', 'S', 'M', 'L', 'XL', '2XL', '3XL'],
-    description: 'Jersey size',
-  },
-  {
-    id: 'shorts-size',
-    name: 'Shorts Size',
-    type: 'select',
-    required: true,
-    options: ['XS', 'S', 'M', 'L', 'XL', '2XL', '3XL'],
-    description: 'Shorts size',
-  },
-  {
-    id: 'socks-size',
-    name: 'Socks Size',
-    type: 'select',
-    required: true,
-    options: ['S (3-6)', 'M (7-9)', 'L (10-13)'],
-    description: 'Socks size',
-  },
-  {
-    id: 'additional-gear',
-    name: 'Additional Equipment',
-    type: 'select',
-    required: false,
-    options: ['None', 'Training Jacket', 'Training Pants', 'Goalkeeper Gloves'],
-    description: 'Optional additional equipment',
-  },
-];
-
-// Function to check if a player mapping is complete
-const isPlayerMappingComplete = (mapping: PlayerMapping, fields: AgreementField[]): boolean => {
-  for (const field of fields) {
-    if (field.required && (!mapping.values[field.id] || mapping.values[field.id].trim() === '')) {
-      return false;
-    }
-  }
-  return true;
-};
-
-export default function AgreementMappingPage() {
+export default function PlayerKitDetailsPage() {
   const params = useParams();
   const router = useRouter();
   const { user } = useAuth();
@@ -172,68 +80,43 @@ export default function AgreementMappingPage() {
   useEffect(() => {
     const fetchData = async () => {
       try {
-        // In a real app, these would be API calls
-        // For demo, we'll use mock data
+        // Fetch agreement details using the new API
+        const detailsResponse = await fetch(
+          `/api/player-kit-details?agreementId=${agreementId}&type=details`,
+        );
 
-        // Get agreement details
-        const agreement = mockAgreements.find((a) => a.id === agreementId);
-        if (!agreement) {
-          throw new Error('Agreement not found');
+        if (!detailsResponse.ok) {
+          throw new Error('Failed to fetch agreement details');
         }
 
-        // Get existing player mappings or initialize empty ones
-        const existingMappings: PlayerMapping[] = [
-          // Some pre-filled data for demo purposes
-          {
-            playerId: 'player-001',
-            values: {
-              'jersey-number': '10',
-              'jersey-name': 'JOHNSON',
-              'jersey-size': 'M',
-              'shorts-size': 'M',
-              'socks-size': 'M (7-9)',
-              'additional-gear': 'Training Jacket',
-            },
-            isComplete: true,
-          },
-          {
-            playerId: 'player-002',
-            values: {
-              'jersey-number': '8',
-              'jersey-name': 'LEE',
-              'jersey-size': 'M',
-              'shorts-size': '',
-              'socks-size': '',
-              'additional-gear': '',
-            },
-            isComplete: false,
-          },
-        ];
+        const detailsData = await detailsResponse.json();
 
-        // Convert to record for easier lookup
+        // Fetch team roster for this agreement
+        const rosterResponse = await fetch(
+          `/api/player-kit-details?agreementId=${agreementId}&type=roster`,
+        );
+        const rosterData = await rosterResponse.json();
+
+        // Set up selected players and mappings from the fetched data
+        const mappings = detailsData.playerMappings || [];
         const mappingsRecord: Record<string, PlayerMapping> = {};
-        existingMappings.forEach((mapping) => {
+        const selected: string[] = [];
+
+        mappings.forEach((mapping: PlayerMapping) => {
           mappingsRecord[mapping.playerId] = mapping;
+          selected.push(mapping.playerId);
         });
 
-        // Set selected players from existing mappings
-        const selected = existingMappings.map((m) => m.playerId);
-
-        setAgreementDetails({
-          ...agreement,
-          fields: mockAgreementFields,
-          teamName: 'First Team',
-          dueDate: 'Apr 25, 2025',
-          playerMappings: existingMappings,
-        });
-        setRoster(mockRoster);
+        setAgreementDetails(detailsData);
+        setRoster(rosterData);
         setSelectedPlayers(selected);
         setPlayerMappings(mappingsRecord);
 
         // Auto-expand the first incomplete player
-        const incompleteMapping = existingMappings.find(
-          (m) => !isPlayerMappingComplete(m, mockAgreementFields),
+        const incompleteMapping = mappings.find(
+          (m: PlayerMapping) => !isPlayerMappingComplete(m, detailsData.fields),
         );
+
         if (incompleteMapping) {
           setExpandedPlayers([incompleteMapping.playerId]);
         }
@@ -251,6 +134,24 @@ export default function AgreementMappingPage() {
   const filteredRoster = roster.filter(
     (player) => player.name.toLowerCase().includes(searchTerm.toLowerCase()) && player.isActive,
   );
+
+  // Function to check if a player mapping is complete
+  const isPlayerMappingComplete = (
+    mapping: PlayerMapping,
+    fields: AgreementField[] | undefined,
+  ): boolean => {
+    // Check if fields is an array and has items
+    if (!Array.isArray(fields) || fields.length === 0) {
+      return true; // If no fields to validate, consider it complete
+    }
+
+    for (const field of fields) {
+      if (field.required && (!mapping.values[field.id] || mapping.values[field.id].trim() === '')) {
+        return false;
+      }
+    }
+    return true;
+  };
 
   // Toggle player selection
   const togglePlayerSelection = (playerId: string) => {
@@ -324,12 +225,22 @@ export default function AgreementMappingPage() {
     setSaveStatus('saving');
 
     try {
-      // In a real app, this would be an API call
+      // In a real app, this would be an API call to save mappings
       // For demo, we'll simulate a delay
       await new Promise((resolve) => setTimeout(resolve, 1000));
 
       // Convert mappings back to array for API format
       const mappingsArray = Object.values(playerMappings);
+
+      // In real app: Save to backend via API
+      // const response = await fetch(`/api/player-mappings`, {
+      //   method: 'POST',
+      //   headers: { 'Content-Type': 'application/json' },
+      //   body: JSON.stringify({
+      //     agreementId,
+      //     mappings: mappingsArray
+      //   })
+      // });
 
       // Update agreement details
       if (agreementDetails) {
@@ -366,7 +277,7 @@ export default function AgreementMappingPage() {
     // In a real app, this would create an order and update the agreement status
     // For demo, we'll just navigate to the order status page
     alert('Player details submitted successfully! An order will be created.');
-    router.push('/order-status');
+    router.push('/order-tracking');
   };
 
   // Calculate completion percentage
@@ -397,13 +308,33 @@ export default function AgreementMappingPage() {
         <AlertTriangle size={48} className="mx-auto text-yellow-500 mb-4" />
         <h1 className="text-2xl font-semibold text-gray-800 mb-2">Agreement Not Found</h1>
         <p className="text-gray-500 mb-6">
-          The agreement youre looking for doesnt exist or you dont have access to it.
+          The agreement you&apos;re looking for doesn&apos;t exist or you don&apos;t have access to
+          it.
         </p>
         <Link
-          href="/team-management"
+          href="/kit-setup"
           className="inline-flex items-center px-4 py-2 bg-primary text-white rounded-md hover:bg-primary/90"
         >
-          <ArrowLeft size={16} className="mr-2" /> Back to Team Management
+          <ArrowLeft size={16} className="mr-2" /> Back to Kit Setup
+        </Link>
+      </div>
+    );
+  }
+
+  if (!agreementDetails) {
+    return (
+      <div className="bg-white rounded-lg shadow-sm p-8 text-center">
+        <AlertTriangle size={48} className="mx-auto text-yellow-500 mb-4" />
+        <h1 className="text-2xl font-semibold text-gray-800 mb-2">Agreement Not Found</h1>
+        <p className="text-gray-500 mb-6">
+          The agreement you&apos;re looking for doesn&apos;t exist or you don&apos;t have access to
+          it.
+        </p>
+        <Link
+          href="/kit-setup"
+          className="inline-flex items-center px-4 py-2 bg-primary text-white rounded-md hover:bg-primary/90"
+        >
+          <ArrowLeft size={16} className="mr-2" /> Back to Kit Setup
         </Link>
       </div>
     );
@@ -413,13 +344,13 @@ export default function AgreementMappingPage() {
     <div>
       <div className="mb-6">
         <Link
-          href="/team-management"
+          href="/kit-setup"
           className="inline-flex items-center text-primary hover:underline mb-4"
         >
-          <ArrowLeft size={16} className="mr-1" /> Back to Team Management
+          <ArrowLeft size={16} className="mr-1" /> Back to Kit Setup
         </Link>
 
-        <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+        <div className="flex flex-col md:flex-row md:items-start md:justify-between gap-4">
           <div>
             <h1 className="text-2xl font-semibold text-gray-800">
               Player Kit Details: {agreementDetails.name}
