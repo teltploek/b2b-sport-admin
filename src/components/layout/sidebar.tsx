@@ -105,9 +105,14 @@ const clubStaffItems: SidebarItem[] = [
     icon: <UserCircle className="h-5 w-5" />,
   },
   {
-    name: 'Kit Setup', // Changed from "Team Management" to "Kit Setup"
+    name: 'Kit Details',
     href: '/kit-setup',
     icon: <Shirt className="h-5 w-5" />,
+  },
+  {
+    name: 'Teams Setup',
+    href: '/teams-setup',
+    icon: <Users className="h-5 w-5" />,
   },
   {
     name: 'Order Tracking', // Changed from "Order Status" to "Order Tracking"
