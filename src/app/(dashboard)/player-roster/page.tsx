@@ -1,4 +1,4 @@
-// src/app/(dashboard)/roster-management/page.tsx
+// src/app/(dashboard)/player-roster/page.tsx
 'use client';
 
 import { useState, useEffect } from 'react';
@@ -14,10 +14,11 @@ import {
   User,
   Save,
   X,
+  UserCircle,
 } from 'lucide-react';
 import Image from 'next/image';
 import { useAuth } from '@/lib/context/auth-context';
-import { getClubById } from '@/lib/data/mock-data';
+import { getClubById, PlayerPosition } from '@/lib/data/mock-data';
 
 // Player interface for roster management
 interface Player {
@@ -26,17 +27,14 @@ interface Player {
   dateOfBirth: string;
   email?: string;
   phone?: string;
-  position: string;
+  position: PlayerPosition;
   joinedDate: string;
   image?: string;
   notes?: string;
   isActive: boolean;
 }
 
-// Position options
-const positionOptions = ['Goalkeeper', 'Defender', 'Midfielder', 'Forward', 'Utility'];
-
-export default function RosterManagementPage() {
+export default function PlayerRosterPage() {
   const { user } = useAuth();
   const [roster, setRoster] = useState<Player[]>([]);
   const [filteredRoster, setFilteredRoster] = useState<Player[]>([]);
@@ -50,7 +48,7 @@ export default function RosterManagementPage() {
     dateOfBirth: '',
     email: '',
     phone: '',
-    position: '',
+    position: PlayerPosition.Forward,
     joinedDate: new Date().toISOString().split('T')[0],
     isActive: true,
   });
@@ -103,9 +101,10 @@ export default function RosterManagementPage() {
       dateOfBirth: newPlayer.dateOfBirth || '',
       email: newPlayer.email,
       phone: newPlayer.phone,
-      position: newPlayer.position || '',
+      position: newPlayer.position || PlayerPosition.Forward,
       joinedDate: newPlayer.joinedDate || new Date().toISOString().split('T')[0],
       isActive: newPlayer.isActive || true,
+      notes: newPlayer.notes,
     };
 
     setRoster([...roster, player]);
@@ -115,7 +114,7 @@ export default function RosterManagementPage() {
       dateOfBirth: '',
       email: '',
       phone: '',
-      position: '',
+      position: PlayerPosition.Forward,
       joinedDate: new Date().toISOString().split('T')[0],
       isActive: true,
     });
@@ -153,12 +152,8 @@ export default function RosterManagementPage() {
     <div>
       <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-6">
         <div>
-          <p className="text-sm text-gray-500 mb-1">Dashboard &gt; Roster Management</p>
           <h1 className="text-2xl font-semibold text-gray-800">Player Roster</h1>
-          <p className="text-gray-500 text-sm mt-1">
-            Manage your player roster for {clubName}. This information is used across all agreements
-            and seasons.
-          </p>
+          <p className="text-gray-500 text-sm mt-1">Manage your player list for {clubName}</p>
         </div>
 
         <button
@@ -190,7 +185,7 @@ export default function RosterManagementPage() {
             onChange={(e) => setPositionFilter(e.target.value)}
           >
             <option value="All">All Positions</option>
-            {positionOptions.map((position) => (
+            {Object.values(PlayerPosition).map((position) => (
               <option key={position} value={position}>
                 {position}
               </option>
@@ -270,13 +265,15 @@ export default function RosterManagementPage() {
                 Position <span className="text-red-500">*</span>
               </label>
               <select
-                value={newPlayer.position || ''}
-                onChange={(e) => setNewPlayer({ ...newPlayer, position: e.target.value })}
+                value={newPlayer.position || PlayerPosition.Forward}
+                onChange={(e) =>
+                  setNewPlayer({ ...newPlayer, position: e.target.value as PlayerPosition })
+                }
                 className="w-full border border-gray-300 rounded-md py-2 px-3 focus:outline-none focus:ring-1 focus:ring-primary focus:border-primary"
                 required
               >
                 <option value="">Select position</option>
-                {positionOptions.map((position) => (
+                {Object.values(PlayerPosition).map((position) => (
                   <option key={position} value={position}>
                     {position}
                   </option>
@@ -309,12 +306,12 @@ export default function RosterManagementPage() {
               <input
                 type="checkbox"
                 id="isActive"
-                checked={newPlayer.isActive}
+                checked={newPlayer.isActive !== false}
                 onChange={(e) => setNewPlayer({ ...newPlayer, isActive: e.target.checked })}
                 className="h-4 w-4 text-primary focus:ring-primary border-gray-300 rounded"
               />
               <label htmlFor="isActive" className="ml-2 block text-sm text-gray-700">
-                Active player (can be selected for agreements)
+                Active player (can be selected for kits)
               </label>
             </div>
           </div>
@@ -347,10 +344,21 @@ export default function RosterManagementPage() {
 
         {filteredRoster.length === 0 ? (
           <div className="p-8 text-center text-gray-500">
-            No players found.{' '}
-            {searchTerm || positionFilter !== 'All'
-              ? 'Try adjusting your filters.'
-              : 'Add players to your roster.'}
+            <UserCircle size={48} className="mx-auto text-gray-400 mb-4" />
+            <h3 className="text-lg font-medium text-gray-800 mb-2">No players found</h3>
+            <p className="text-gray-500">
+              {searchTerm || positionFilter !== 'All'
+                ? 'Try adjusting your filters.'
+                : 'Add players to your roster.'}
+            </p>
+            {searchTerm === '' && positionFilter === 'All' && (
+              <button
+                onClick={() => setIsAddingPlayer(true)}
+                className="mt-4 inline-flex items-center justify-center px-4 py-2 bg-primary text-white rounded-md text-sm font-medium"
+              >
+                <Plus size={16} className="mr-2" /> Add Your First Player
+              </button>
+            )}
           </div>
         ) : (
           <div className="divide-y divide-gray-100">
@@ -399,10 +407,12 @@ export default function RosterManagementPage() {
                       </label>
                       <select
                         value={newPlayer.position || player.position}
-                        onChange={(e) => setNewPlayer({ ...newPlayer, position: e.target.value })}
+                        onChange={(e) =>
+                          setNewPlayer({ ...newPlayer, position: e.target.value as PlayerPosition })
+                        }
                         className="w-full border border-gray-300 rounded-md py-2 px-3 focus:outline-none focus:ring-1 focus:ring-primary focus:border-primary"
                       >
-                        {positionOptions.map((position) => (
+                        {Object.values(PlayerPosition).map((position) => (
                           <option key={position} value={position}>
                             {position}
                           </option>
@@ -462,7 +472,7 @@ export default function RosterManagementPage() {
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
                         <div className="flex items-center text-sm text-gray-600">
                           <Calendar size={14} className="mr-2 text-gray-400" />
-                          DOB: {new Date(player.dateOfBirth).toLocaleDateString()}
+                          Born: {new Date(player.dateOfBirth).toLocaleDateString()}
                         </div>
                         {player.email && (
                           <div className="flex items-center text-sm text-gray-600">
@@ -495,12 +505,14 @@ export default function RosterManagementPage() {
                           setNewPlayer({});
                         }}
                         className="p-2 text-gray-600 hover:text-primary hover:bg-gray-100 rounded"
+                        aria-label="Edit player"
                       >
                         <Edit size={18} />
                       </button>
                       <button
                         onClick={() => handleDeletePlayer(player.id)}
                         className="p-2 text-gray-600 hover:text-red-600 hover:bg-gray-100 rounded"
+                        aria-label="Delete player"
                       >
                         <Trash2 size={18} />
                       </button>
@@ -511,6 +523,34 @@ export default function RosterManagementPage() {
             ))}
           </div>
         )}
+      </div>
+
+      {/* Tips Section */}
+      <div className="mt-6 bg-white rounded-lg shadow-sm p-6 border border-gray-100">
+        <h2 className="text-lg font-medium text-gray-800 mb-4">Tips for Managing Your Roster</h2>
+
+        <div className="space-y-3 text-sm text-gray-600">
+          <div className="flex items-start">
+            <span className="inline-block bg-primary/10 text-primary rounded-full h-5 w-5 flex items-center justify-center text-xs font-medium mr-2 mt-0.5">
+              1
+            </span>
+            <div>Keep your player list up-to-date to make kit setup easier.</div>
+          </div>
+          <div className="flex items-start">
+            <span className="inline-block bg-primary/10 text-primary rounded-full h-5 w-5 flex items-center justify-center text-xs font-medium mr-2 mt-0.5">
+              2
+            </span>
+            <div>
+              Set inactive players who are no longer with the club to avoid selecting them for kits.
+            </div>
+          </div>
+          <div className="flex items-start">
+            <span className="inline-block bg-primary/10 text-primary rounded-full h-5 w-5 flex items-center justify-center text-xs font-medium mr-2 mt-0.5">
+              3
+            </span>
+            <div>Include contact details for players to help with kit delivery confirmation.</div>
+          </div>
+        </div>
       </div>
     </div>
   );

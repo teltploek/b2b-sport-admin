@@ -1,4 +1,4 @@
-// src/app/(dashboard)/order-status/page.tsx
+// src/app/(dashboard)/order-tracking/page.tsx
 'use client';
 
 import { useState, useEffect } from 'react';
@@ -18,10 +18,7 @@ import {
   Eye,
 } from 'lucide-react';
 import { useAuth } from '@/lib/context/auth-context';
-import { getClubById } from '@/lib/data/mock-data';
-
-// Order Status type
-type OrderStatus = 'Pending' | 'Processing' | 'Shipped' | 'Delivered' | 'Canceled';
+import { getClubById, OrderStatus } from '@/lib/data/mock-data';
 
 // Extended Order interface for more details
 interface DetailedOrder {
@@ -30,6 +27,7 @@ interface DetailedOrder {
   clubId: string;
   teamId: string;
   teamName: string;
+  kitName: string;
   createdAt: string;
   updatedAt: string;
   status: OrderStatus;
@@ -38,10 +36,10 @@ interface DetailedOrder {
   estimatedDelivery?: string;
   trackingNumber?: string;
   playerCount: number;
-  progress: number; // percentage of completion
+  progress: number;
 }
 
-export default function OrderStatusPage() {
+export default function OrderTrackingPage() {
   const { user } = useAuth();
   const [orders, setOrders] = useState<DetailedOrder[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -89,7 +87,8 @@ export default function OrderStatusPage() {
   const filteredOrders = orders.filter((order) => {
     const matchesSearch =
       order.id.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      order.teamName.toLowerCase().includes(searchTerm.toLowerCase());
+      order.teamName.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      order.kitName.toLowerCase().includes(searchTerm.toLowerCase());
     const matchesStatus = statusFilter === 'All' || order.status === statusFilter;
 
     return matchesSearch && matchesStatus;
@@ -97,31 +96,31 @@ export default function OrderStatusPage() {
 
   const getStatusConfig = (status: OrderStatus) => {
     switch (status) {
-      case 'Pending':
+      case OrderStatus.Pending:
         return {
           badge: (
             <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800">
-              <Clock size={12} className="mr-1" /> Pending
+              <Clock size={12} className="mr-1" /> Being Prepared
             </span>
           ),
           icon: <Clock size={20} className="text-yellow-500" />,
           color: 'bg-yellow-100',
           textColor: 'text-yellow-800',
-          description: 'Your order is pending approval',
+          description: 'Your order is being prepared',
         };
-      case 'Processing':
+      case OrderStatus.Processing:
         return {
           badge: (
             <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
-              <Package size={12} className="mr-1" /> Processing
+              <Package size={12} className="mr-1" /> In Production
             </span>
           ),
           icon: <Package size={20} className="text-blue-500" />,
           color: 'bg-blue-100',
           textColor: 'text-blue-800',
-          description: 'Your order is being prepared',
+          description: 'Your order is in production',
         };
-      case 'Shipped':
+      case OrderStatus.Shipped:
         return {
           badge: (
             <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-indigo-100 text-indigo-800">
@@ -133,7 +132,7 @@ export default function OrderStatusPage() {
           textColor: 'text-indigo-800',
           description: 'Your order is on the way',
         };
-      case 'Delivered':
+      case OrderStatus.Delivered:
         return {
           badge: (
             <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
@@ -145,7 +144,7 @@ export default function OrderStatusPage() {
           textColor: 'text-green-800',
           description: 'Your order has been delivered',
         };
-      case 'Canceled':
+      case OrderStatus.Canceled:
         return {
           badge: (
             <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-800">
@@ -173,11 +172,11 @@ export default function OrderStatusPage() {
   // Count orders by status
   const countByStatus = {
     total: orders.length,
-    pending: orders.filter((o) => o.status === 'Pending').length,
-    processing: orders.filter((o) => o.status === 'Processing').length,
-    shipped: orders.filter((o) => o.status === 'Shipped').length,
-    delivered: orders.filter((o) => o.status === 'Delivered').length,
-    canceled: orders.filter((o) => o.status === 'Canceled').length,
+    pending: orders.filter((o) => o.status === OrderStatus.Pending).length,
+    processing: orders.filter((o) => o.status === OrderStatus.Processing).length,
+    shipped: orders.filter((o) => o.status === OrderStatus.Shipped).length,
+    delivered: orders.filter((o) => o.status === OrderStatus.Delivered).length,
+    canceled: orders.filter((o) => o.status === OrderStatus.Canceled).length,
   };
 
   if (isLoading) {
@@ -195,9 +194,9 @@ export default function OrderStatusPage() {
         <>
           <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-6">
             <div>
-              <h1 className="text-2xl font-semibold text-gray-800">Order Status</h1>
+              <h1 className="text-2xl font-semibold text-gray-800">Order Tracking</h1>
               <p className="text-gray-500 text-sm mt-1">
-                Track and manage your orders for {clubName}
+                Track and manage your kit orders for {clubName}
               </p>
             </div>
           </div>
@@ -205,19 +204,19 @@ export default function OrderStatusPage() {
           {/* Status Cards */}
           <div className="grid grid-cols-2 md:grid-cols-5 gap-4 mb-6">
             <StatusCard
-              title="Total Orders"
+              title="All Orders"
               count={countByStatus.total}
               icon={<ShoppingBag size={18} className="text-primary" />}
               color="bg-primary/10"
             />
             <StatusCard
-              title="Pending"
+              title="Being Prepared"
               count={countByStatus.pending}
               icon={<Clock size={18} className="text-yellow-500" />}
               color="bg-yellow-100"
             />
             <StatusCard
-              title="Processing"
+              title="In Production"
               count={countByStatus.processing}
               icon={<Package size={18} className="text-blue-500" />}
               color="bg-blue-100"
@@ -257,11 +256,11 @@ export default function OrderStatusPage() {
                 onChange={(e) => setStatusFilter(e.target.value as OrderStatus | 'All')}
               >
                 <option value="All">All Statuses</option>
-                <option value="Pending">Pending</option>
-                <option value="Processing">Processing</option>
-                <option value="Shipped">Shipped</option>
-                <option value="Delivered">Delivered</option>
-                <option value="Canceled">Canceled</option>
+                <option value={OrderStatus.Pending}>Being Prepared</option>
+                <option value={OrderStatus.Processing}>In Production</option>
+                <option value={OrderStatus.Shipped}>Shipped</option>
+                <option value={OrderStatus.Delivered}>Delivered</option>
+                <option value={OrderStatus.Canceled}>Canceled</option>
               </select>
               <div className="absolute inset-y-0 right-0 flex items-center px-2 pointer-events-none">
                 <Filter size={18} className="text-gray-600" />
@@ -272,14 +271,12 @@ export default function OrderStatusPage() {
           {/* Orders List */}
           {filteredOrders.length === 0 ? (
             <div className="bg-white rounded-lg shadow-sm p-8 text-center">
-              <div className="mx-auto w-12 h-12 rounded-full bg-gray-100 flex items-center justify-center mb-4">
-                <ShoppingBag size={24} className="text-gray-400" />
-              </div>
-              <h3 className="text-lg font-medium text-gray-900 mb-1">No orders found</h3>
+              <ShoppingBag size={48} className="mx-auto text-gray-400 mb-4" />
+              <h2 className="text-lg font-semibold text-gray-800 mb-2">No Orders Found</h2>
               <p className="text-gray-500 text-sm">
                 {searchTerm || statusFilter !== 'All'
                   ? 'Try adjusting your search or filter criteria'
-                  : 'You have no orders at the moment'}
+                  : 'You have no orders at the moment.'}
               </p>
             </div>
           ) : (
@@ -304,13 +301,13 @@ export default function OrderStatusPage() {
                           </div>
 
                           <h3 className="text-lg font-medium text-gray-900 mb-2">
-                            {order.teamName} Kit Order
+                            {order.kitName}
                           </h3>
 
                           <div className="flex flex-col sm:flex-row sm:gap-6 text-sm text-gray-500">
                             <div className="flex items-center">
                               <CalendarClock size={14} className="mr-1.5 text-gray-400" />
-                              Created: {order.createdAt}
+                              Ordered: {order.createdAt}
                             </div>
                             <div className="flex items-center">
                               <Package size={14} className="mr-1.5 text-gray-400" />
@@ -318,32 +315,31 @@ export default function OrderStatusPage() {
                             </div>
                             <div className="flex items-center">
                               <ShoppingBag size={14} className="mr-1.5 text-gray-400" />
-                              {order.playerCount} Players
+                              Team: {order.teamName}
                             </div>
                           </div>
                         </div>
 
                         <div className="flex flex-col items-end">
-                          {order.estimatedDelivery && (
-                            <div className="text-sm text-gray-500 mb-2">
-                              {order.status === 'Delivered'
-                                ? 'Delivered on:'
-                                : 'Estimated delivery:'}{' '}
-                              {order.estimatedDelivery}
-                            </div>
-                          )}
+                          {order.estimatedDelivery &&
+                            order.status !== OrderStatus.Delivered &&
+                            order.status !== OrderStatus.Canceled && (
+                              <div className="text-sm text-gray-500 mb-2">
+                                Expected delivery: {order.estimatedDelivery}
+                              </div>
+                            )}
 
                           {/* Progress bar */}
                           <div className="w-full max-w-[200px] h-2 bg-gray-100 rounded-full overflow-hidden mb-1">
                             <div
                               className={`h-full ${
-                                order.status === 'Canceled' ? 'bg-gray-400' : 'bg-primary'
+                                order.status === OrderStatus.Canceled ? 'bg-gray-400' : 'bg-primary'
                               }`}
                               style={{ width: `${order.progress}%` }}
                             ></div>
                           </div>
                           <div className="text-xs text-gray-500">
-                            {order.status === 'Canceled'
+                            {order.status === OrderStatus.Canceled
                               ? 'Canceled'
                               : `${order.progress}% Complete`}
                           </div>
@@ -385,19 +381,21 @@ export default function OrderStatusPage() {
                 <h1 className="text-2xl font-semibold text-gray-800">
                   Order Details: {selectedOrder.id}
                 </h1>
-                <p className="text-gray-500 text-sm mt-1">{selectedOrder.teamName} Kit Order</p>
+                <p className="text-gray-500 text-sm mt-1">
+                  {selectedOrder.kitName} - {selectedOrder.teamName}
+                </p>
               </div>
 
               {/* Action buttons */}
               <div className="flex gap-2">
-                {selectedOrder.status === 'Shipped' && (
+                {selectedOrder.status === OrderStatus.Shipped && selectedOrder.trackingNumber && (
                   <button className="px-3 py-1.5 border border-primary text-primary rounded hover:bg-primary/5 flex items-center text-sm">
                     <TruckIcon size={14} className="mr-1.5" /> Track Package
                   </button>
                 )}
 
                 <button className="px-3 py-1.5 border border-gray-300 text-gray-700 rounded hover:bg-gray-50 flex items-center text-sm">
-                  <Download size={14} className="mr-1.5" /> Download Invoice
+                  <Download size={14} className="mr-1.5" /> Download Order Details
                 </button>
               </div>
             </div>
@@ -415,21 +413,28 @@ export default function OrderStatusPage() {
                 <TimelineItem
                   title="Order Submitted"
                   date={selectedOrder.createdAt}
-                  description="Your kit details have been submitted successfully."
-                  status="completed"
+                  description="Your order has been received and is being processed."
+                  status={selectedOrder.status === OrderStatus.Canceled ? 'canceled' : 'completed'}
                 />
 
                 <TimelineItem
-                  title="Order Processing"
-                  date={selectedOrder.status === 'Pending' ? '' : selectedOrder.updatedAt}
-                  description="Your order is being processed and prepared for production."
-                  status={selectedOrder.status === 'Pending' ? 'pending' : 'completed'}
+                  title="In Production"
+                  date={selectedOrder.status === OrderStatus.Pending ? '' : selectedOrder.updatedAt}
+                  description="Your kit items are being produced and customized."
+                  status={
+                    selectedOrder.status === OrderStatus.Pending
+                      ? 'upcoming'
+                      : selectedOrder.status === OrderStatus.Canceled
+                      ? 'canceled'
+                      : 'completed'
+                  }
                 />
 
                 <TimelineItem
                   title="Shipping"
                   date={
-                    selectedOrder.status === 'Shipped' || selectedOrder.status === 'Delivered'
+                    selectedOrder.status === OrderStatus.Shipped ||
+                    selectedOrder.status === OrderStatus.Delivered
                       ? selectedOrder.updatedAt
                       : ''
                   }
@@ -439,9 +444,10 @@ export default function OrderStatusPage() {
                       : 'Your order will be shipped soon.'
                   }
                   status={
-                    selectedOrder.status === 'Pending' || selectedOrder.status === 'Processing'
+                    selectedOrder.status === OrderStatus.Pending ||
+                    selectedOrder.status === OrderStatus.Processing
                       ? 'upcoming'
-                      : selectedOrder.status === 'Canceled'
+                      : selectedOrder.status === OrderStatus.Canceled
                       ? 'canceled'
                       : 'completed'
                   }
@@ -449,18 +455,20 @@ export default function OrderStatusPage() {
 
                 <TimelineItem
                   title="Delivery"
-                  date={selectedOrder.status === 'Delivered' ? selectedOrder.updatedAt : ''}
+                  date={
+                    selectedOrder.status === OrderStatus.Delivered ? selectedOrder.updatedAt : ''
+                  }
                   description={
-                    selectedOrder.status === 'Delivered'
+                    selectedOrder.status === OrderStatus.Delivered
                       ? 'Your order has been delivered successfully.'
                       : `Estimated delivery date: ${
                           selectedOrder.estimatedDelivery || 'To be determined'
                         }`
                   }
                   status={
-                    selectedOrder.status === 'Delivered'
+                    selectedOrder.status === OrderStatus.Delivered
                       ? 'completed'
-                      : selectedOrder.status === 'Canceled'
+                      : selectedOrder.status === OrderStatus.Canceled
                       ? 'canceled'
                       : 'upcoming'
                   }
@@ -480,12 +488,17 @@ export default function OrderStatusPage() {
               </div>
 
               <div className="flex justify-between items-center pb-3 border-b border-gray-100">
+                <div className="text-gray-600">Kit Name:</div>
+                <div className="font-medium">{selectedOrder.kitName}</div>
+              </div>
+
+              <div className="flex justify-between items-center pb-3 border-b border-gray-100">
                 <div className="text-gray-600">Team:</div>
                 <div className="font-medium">{selectedOrder.teamName}</div>
               </div>
 
               <div className="flex justify-between items-center pb-3 border-b border-gray-100">
-                <div className="text-gray-600">Date Placed:</div>
+                <div className="text-gray-600">Date Ordered:</div>
                 <div className="font-medium">{selectedOrder.createdAt}</div>
               </div>
 

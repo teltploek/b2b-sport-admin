@@ -18,6 +18,7 @@ import {
   Gauge,
   FileText,
   CircleAlert,
+  UserCircle,
 } from 'lucide-react';
 import { getClubById } from '@/lib/data/mock-data';
 
@@ -40,7 +41,7 @@ interface Task {
 const mockTasks: Task[] = [
   {
     id: 'task-001',
-    title: 'Complete Player Kit Details',
+    title: 'Complete First Team Kit Details',
     teamName: 'First Team',
     agreementId: 'AGR-001244',
     dueDate: 'Apr 20, 2025',
@@ -50,7 +51,7 @@ const mockTasks: Task[] = [
   },
   {
     id: 'task-002',
-    title: 'Verify Youth Team Roster',
+    title: 'Update Youth Team Roster',
     teamName: 'Youth Team',
     agreementId: 'AGR-001245',
     dueDate: 'Apr 22, 2025',
@@ -60,7 +61,7 @@ const mockTasks: Task[] = [
   },
   {
     id: 'task-003',
-    title: 'Review Order Status',
+    title: 'Check Order Delivery Status',
     teamName: "Women's Team",
     agreementId: 'AGR-001243',
     dueDate: 'Apr 18, 2025',
@@ -70,7 +71,7 @@ const mockTasks: Task[] = [
   },
   {
     id: 'task-004',
-    title: 'Approve Training Kit Designs',
+    title: 'Review Training Gear Options',
     teamName: 'First Team',
     agreementId: 'AGR-001246',
     dueDate: 'May 1, 2025',
@@ -80,7 +81,7 @@ const mockTasks: Task[] = [
   },
   {
     id: 'task-005',
-    title: 'Update Player Numbers',
+    title: 'Confirm Player Numbers',
     teamName: 'U16 Team',
     agreementId: 'AGR-001247',
     dueDate: 'Apr 15, 2025',
@@ -114,7 +115,7 @@ const mockActivities: Activity[] = [
   },
   {
     id: 'act-003',
-    description: "New agreement created for Women's Team",
+    description: "New kit request approved for Women's Team",
     timestamp: 'Apr 15, 2025',
     type: 'agreement',
   },
@@ -202,10 +203,10 @@ export default function ClubStaffDashboard() {
           </div>
 
           <div>
-            <h1 className="text-xl font-semibold text-gray-800">
-              Welcome to {club?.name || 'Your Club'} Staff Portal
-            </h1>
-            <p className="text-gray-500 text-sm mt-1">Manage your team details and track orders</p>
+            <h1 className="text-xl font-semibold text-gray-800">Welcome, {user?.name}</h1>
+            <p className="text-gray-500 text-sm mt-1">
+              Manage your teams kit information and track orders
+            </p>
           </div>
         </div>
       </div>
@@ -213,25 +214,25 @@ export default function ClubStaffDashboard() {
       {/* Stats Cards */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
         <StatsCard
-          title="Total Tasks"
+          title="Tasks"
           value={stats.totalTasks}
           icon={<ClipboardList className="h-5 w-5 text-primary" />}
           color="bg-primary/10"
         />
         <StatsCard
-          title="Completed Tasks"
+          title="Completed"
           value={stats.completedTasks}
           icon={<CheckCircle className="h-5 w-5 text-green-500" />}
           color="bg-green-100"
         />
         <StatsCard
-          title="Pending Tasks"
+          title="Pending"
           value={stats.pendingTasks}
           icon={<Clock className="h-5 w-5 text-orange-500" />}
           color="bg-orange-100"
         />
         <StatsCard
-          title="Active Orders"
+          title="Orders"
           value={stats.pendingOrders}
           icon={<ShoppingBag className="h-5 w-5 text-blue-600" />}
           color="bg-blue-100"
@@ -243,7 +244,7 @@ export default function ClubStaffDashboard() {
         <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4 mb-6 flex items-center">
           <AlertTriangle className="h-5 w-5 text-yellow-500 mr-3 flex-shrink-0" />
           <div>
-            <h3 className="font-medium text-yellow-800">Attention Required</h3>
+            <h3 className="font-medium text-yellow-800">Attention Needed</h3>
             <p className="text-sm text-yellow-700 mt-1">
               You have {priorityTasks.length} high priority or overdue{' '}
               {priorityTasks.length === 1 ? 'task' : 'tasks'} that need your attention.
@@ -264,7 +265,7 @@ export default function ClubStaffDashboard() {
           <div className="bg-white rounded-lg shadow-sm overflow-hidden">
             <div className="px-6 py-4 border-b border-gray-100 flex items-center justify-between">
               <h2 className="text-lg font-semibold text-gray-800">Your Tasks</h2>
-              <Link href="/team-management" className="text-sm text-primary hover:underline">
+              <Link href="/kit-setup" className="text-sm text-primary hover:underline">
                 View All
               </Link>
             </div>
@@ -303,10 +304,12 @@ export default function ClubStaffDashboard() {
                       <Link
                         href={
                           task.title.includes('Kit Details')
-                            ? '/team-management'
-                            : task.title.includes('Order Status')
-                            ? '/order-status'
-                            : '/team-management'
+                            ? '/kit-setup'
+                            : task.title.includes('Order')
+                            ? '/order-tracking'
+                            : task.title.includes('Roster')
+                            ? '/player-roster'
+                            : '/kit-setup'
                         }
                         className="text-primary hover:text-primary/80"
                       >
@@ -340,7 +343,7 @@ export default function ClubStaffDashboard() {
 
             {tasks.length > 3 && (
               <div className="px-6 py-3 bg-gray-50 text-center">
-                <Link href="/team-management" className="text-sm text-primary hover:underline">
+                <Link href="/kit-setup" className="text-sm text-primary hover:underline">
                   View All {tasks.length} Tasks
                 </Link>
               </div>
@@ -356,22 +359,22 @@ export default function ClubStaffDashboard() {
             </div>
             <div className="p-6 space-y-4">
               <QuickActionCard
-                title="Manage Team Details"
-                description="Update player kit information"
-                icon={<Users className="h-5 w-5 text-primary" />}
-                href="/team-management"
+                title="Update Player Roster"
+                description="Add or edit player information"
+                icon={<UserCircle className="h-5 w-5 text-primary" />}
+                href="/player-roster"
+              />
+              <QuickActionCard
+                title="Set Up Team Kits"
+                description="Complete player kit details"
+                icon={<Shirt className="h-5 w-5 text-primary" />}
+                href="/kit-setup"
               />
               <QuickActionCard
                 title="Track Orders"
-                description="View order status and updates"
+                description="Check order status and updates"
                 icon={<ShoppingBag className="h-5 w-5 text-primary" />}
-                href="/order-status"
-              />
-              <QuickActionCard
-                title="Kit Designer"
-                description="Customize team jerseys"
-                icon={<Shirt className="h-5 w-5 text-primary" />}
-                href="/team-management"
+                href="/order-tracking"
               />
             </div>
           </div>
@@ -519,7 +522,7 @@ function TaskStatusBadge({ status }: { status: TaskStatus }) {
     case 'pending':
       return (
         <div className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-800">
-          <Clock size={10} className="mr-1" /> Pending
+          <Clock size={10} className="mr-1" /> Not Started
         </div>
       );
     case 'in-progress':
@@ -531,7 +534,7 @@ function TaskStatusBadge({ status }: { status: TaskStatus }) {
     case 'complete':
       return (
         <div className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
-          <CheckCircle size={10} className="mr-1" /> Complete
+          <CheckCircle size={10} className="mr-1" /> Completed
         </div>
       );
     case 'overdue':

@@ -14,13 +14,13 @@ import {
   Users,
   Settings,
   UserCog,
-  FileCheck,
   ShoppingBag,
   ShoppingCart,
-  UsersRound,
+  Shirt,
   ChevronLeft,
   LogOut,
-  Shirt,
+  UserCircle,
+  ClipboardCheck,
 } from 'lucide-react';
 
 interface SidebarItem {
@@ -29,6 +29,7 @@ interface SidebarItem {
   icon: React.ReactNode;
 }
 
+// B2B Admin can use business terminology - they understand the system
 const b2bAdminItems: SidebarItem[] = [
   {
     name: 'Dashboard',
@@ -62,6 +63,7 @@ const b2bAdminItems: SidebarItem[] = [
   },
 ];
 
+// Club Admin uses more task-oriented language but still understands some business concepts
 const clubAdminItems: SidebarItem[] = [
   {
     name: 'Dashboard',
@@ -74,9 +76,9 @@ const clubAdminItems: SidebarItem[] = [
     icon: <UserCog className="h-5 w-5" />,
   },
   {
-    name: 'Agreements',
-    href: '/agreements',
-    icon: <FileCheck className="h-5 w-5" />,
+    name: 'Kit Requests', // Changed from "Agreements" to "Kit Requests"
+    href: '/kit-requests',
+    icon: <ClipboardCheck className="h-5 w-5" />,
   },
   {
     name: 'Orders',
@@ -90,6 +92,7 @@ const clubAdminItems: SidebarItem[] = [
   },
 ];
 
+// Club Staff uses completely user-friendly language focused on their actual tasks
 const clubStaffItems: SidebarItem[] = [
   {
     name: 'Dashboard',
@@ -97,18 +100,18 @@ const clubStaffItems: SidebarItem[] = [
     icon: <LayoutDashboard className="h-5 w-5" />,
   },
   {
-    name: 'Roster Management',
-    href: '/roster-management',
-    icon: <UsersRound className="h-5 w-5" />,
+    name: 'Player Roster', // Changed from "Roster Management" to "Player Roster"
+    href: '/player-roster',
+    icon: <UserCircle className="h-5 w-5" />,
   },
   {
-    name: 'Team Management',
-    href: '/team-management',
+    name: 'Kit Setup', // Changed from "Team Management" to "Kit Setup"
+    href: '/kit-setup',
     icon: <Shirt className="h-5 w-5" />,
   },
   {
-    name: 'Order Status',
-    href: '/order-status',
+    name: 'Order Tracking', // Changed from "Order Status" to "Order Tracking"
+    href: '/order-tracking',
     icon: <ShoppingCart className="h-5 w-5" />,
   },
 ];

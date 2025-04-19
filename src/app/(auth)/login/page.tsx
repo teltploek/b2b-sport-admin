@@ -6,6 +6,7 @@ import { useRouter } from 'next/navigation';
 import { LogIn } from 'lucide-react';
 import { UserRole } from '@/lib/data/mock-data';
 import { useAuth } from '@/lib/context/auth-context';
+import Image from 'next/image';
 
 export default function LoginPage() {
   const [role, setRole] = useState<UserRole>(UserRole.B2BSportAdmin);
@@ -34,10 +35,8 @@ export default function LoginPage() {
     <div className="min-h-screen flex flex-col bg-gray-50">
       {/* Header with logo */}
       <div className="py-6 border-b bg-white">
-        <div className="max-w-md mx-auto px-4">
-          <div className="w-32">
-            <span className="text-xl font-bold text-primary">B2B Sport</span>
-          </div>
+        <div className="max-w-md mx-auto px-4 flex justify-center">
+          <Image src="/logo.png" alt="B2B Sport Logo" width={143} height={40} />
         </div>
       </div>
 
