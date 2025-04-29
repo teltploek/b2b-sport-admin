@@ -76,8 +76,8 @@ const clubAdminItems: SidebarItem[] = [
     icon: <UserCog className="h-5 w-5" />,
   },
   {
-    name: 'Kit Requests', // Changed from "Agreements" to "Kit Requests"
-    href: '/kit-requests',
+    name: 'Agreements', // Changed from "Agreements" to "Kit Requests"
+    href: '/agreements',
     icon: <ClipboardCheck className="h-5 w-5" />,
   },
   {
